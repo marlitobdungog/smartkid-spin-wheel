@@ -46,6 +46,10 @@ const STUDENT_COLORS = [
 
 export default function App() {
   const [studentNamesText, setStudentNamesText] = useState<string>(INITIAL_STUDENT_NAMES.join('\n'));
+  const [questionsText, setQuestionsText] = useState<string>('Is bird can fly?');
+  const [questionsDraft, setQuestionsDraft] = useState<string>('Is bird can fly?');
+  const [isEditingQuestions, setIsEditingQuestions] = useState(false);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [isSpinning, setIsSpinning] = useState(false);
   const [currentTurn, setCurrentTurn] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0);
@@ -61,6 +65,37 @@ export default function App() {
         color: STUDENT_COLORS[index % STUDENT_COLORS.length],
       }));
   }, [studentNamesText]);
+
+  const questions = useMemo<string[]>(() => {
+    return questionsText
+      .split('\n')
+      .map((question) => question.trim())
+      .filter((question) => question.length > 0);
+  }, [questionsText]);
+
+  const currentQuestion = questions[currentQuestionIndex] || '--';
+
+  const openQuestionEditor = () => {
+    setQuestionsDraft(questionsText);
+    setIsEditingQuestions(true);
+  };
+
+  const cancelQuestionEditor = () => {
+    setQuestionsDraft(questionsText);
+    setIsEditingQuestions(false);
+  };
+
+  const saveQuestions = () => {
+    setQuestionsText(questionsDraft);
+    setCurrentQuestionIndex(0);
+    setIsEditingQuestions(false);
+  };
+
+  const nextQuestion = () => {
+    if (questions.length === 0) return;
+    setCurrentQuestionIndex((prevIndex) => (prevIndex + 1) % questions.length);
+    setCurrentTurn(null);
+  };
 
   const spin = async () => {
     if (isSpinning || students.length === 0) return;
@@ -80,9 +115,9 @@ export default function App() {
     // Calculate winner
     const normalizedRotation = newRotation % 360;
     const sliceSize = 360 / students.length;
-    // Since SVG is rotated -90, slice 0 starts at the top (12 o'clock)
-    // As the wheel rotates clockwise, the arrow points to slices further back
-    const winningIndex = Math.floor((360 - (normalizedRotation % 360)) % 360 / sliceSize);
+    const halfSlice = sliceSize / 2;
+    const adjustedAngle = (360 - normalizedRotation + halfSlice) % 360;
+    const winningIndex = Math.floor(adjustedAngle / sliceSize);
     const winner = students[winningIndex];
     
     setCurrentTurn(winner.name);
@@ -110,15 +145,63 @@ export default function App() {
             <BookOpen size={24} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Quiz Spinner</h1>
-            <p className="text-sm text-slate-500 font-medium">Class 5-B • Science Review</p>
+            <h1 className="text-2xl font-bold tracking-tight">Spin the Wheel</h1>
           </div>
         </div>
 
         <div className="w-full max-w-2xl mx-auto">
-          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-            <h1 className="text-4xl font-bold text-amber-900">Question:</h1>
-            <p className="text-4xl font-semibold text-amber-900 mt-2">Is bird can fly?</p>
+          <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4">
+            {!isEditingQuestions ? (
+              <>
+                <div className="flex items-center justify-between">
+                  <h1 className="text-4xl font-bold text-amber-900">Question:</h1>
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={nextQuestion}
+                      disabled={questions.length <= 1}
+                      className={`px-4 py-2 rounded-xl text-sm font-bold uppercase tracking-wide transition-all ${
+                        questions.length <= 1
+                          ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                          : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                      }`}
+                    >
+                      Next
+                    </button>
+                    <button
+                      onClick={openQuestionEditor}
+                      className="text-sm font-semibold text-indigo-600 hover:text-indigo-700"
+                    >
+                      Edit
+                    </button>
+                  </div>
+                </div>
+                <p className="text-4xl font-semibold text-amber-900 mt-2">{currentQuestion}</p>
+              </>
+            ) : (
+              <>
+                <h1 className="text-4xl font-bold text-amber-900">Question:</h1>
+                <textarea
+                  value={questionsDraft}
+                  onChange={(event) => setQuestionsDraft(event.target.value)}
+                  className="w-full mt-3 min-h-28 rounded-2xl border border-amber-200 p-3 text-lg text-amber-900 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  placeholder={'Is bird can fly?\nWhat is photosynthesis?'}
+                />
+                <div className="mt-3 flex items-center justify-center gap-3">
+                  <button
+                    onClick={saveQuestions}
+                    className="px-4 py-2 rounded-xl bg-indigo-600 text-white font-semibold hover:bg-indigo-700"
+                  >
+                    Save
+                  </button>
+                  <button
+                    onClick={cancelQuestionEditor}
+                    className="px-4 py-2 rounded-xl bg-white border border-slate-200 text-slate-700 font-semibold hover:bg-slate-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </header>
