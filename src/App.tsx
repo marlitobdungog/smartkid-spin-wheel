@@ -95,10 +95,8 @@ export default function App() {
 
         <div className="flex-1 max-w-2xl mx-12">
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
-            <p className="text-xs uppercase tracking-widest font-bold text-amber-600 mb-1">Current Challenge</p>
-            <p className="text-lg font-serif italic font-semibold text-amber-900">
-              {currentTurn ? `It's ${currentTurn}'s turn! Answer the question.` : '"Press spin to select the next student and question!"'}
-            </p>
+            <h1 className="text-4xl font-bold text-amber-900">Question:</h1>
+            <p className="text-4xl font-semibold text-amber-900 mt-2">Is bird can fly?</p>
           </div>
         </div>
 
@@ -150,6 +148,14 @@ export default function App() {
 
         {/* Spinner Area */}
         <div className="flex-1 flex flex-col items-center justify-center relative">
+          <div className="mb-6 text-center min-h-12">
+            {currentTurn ? (
+              <h2 className="text-3xl font-bold text-indigo-700">{currentTurn}</h2>
+            ) : (
+              <h2 className="text-3xl font-bold text-slate-400">--</h2>
+            )}
+          </div>
+
           <div className="relative w-[500px] h-[500px]">
             {/* Arrow Indicator */}
             <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20 text-red-500 drop-shadow-md">
