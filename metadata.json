@@ -1,0 +1,5 @@
+{
+  "name": "Quiz Spinner",
+  "description": "An interactive classroom tool to randomly select students for quizzes and challenges with a fun spinning wheel.",
+  "requestFramePermissions": []
+}
