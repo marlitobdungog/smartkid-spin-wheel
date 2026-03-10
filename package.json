@@ -2,13 +2,18 @@
   "name": "react-example",
   "private": true,
   "version": "0.0.0",
+  "main": "electron/main.cjs",
   "type": "module",
   "scripts": {
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
     "clean": "rm -rf dist",
-    "lint": "tsc --noEmit"
+    "lint": "tsc --noEmit",
+    "electron:dev": "npm run build && electron .",
+    "electron:package": "npm run build && node scripts/package-electron.cjs",
+    "electron:build": "npm run electron:package",
+    "electron:build:win": "npm run electron:package"
   },
   "dependencies": {
     "@google/genai": "^1.29.0",
@@ -29,6 +34,8 @@
     "@types/express": "^4.17.21",
     "@types/node": "^22.14.0",
     "autoprefixer": "^10.4.21",
+    "electron": "^40.7.0",
+    "electron-packager": "^17.1.2",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
