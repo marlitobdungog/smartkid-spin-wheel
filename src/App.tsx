@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useMemo, useState } from 'react';
 import { BookOpen, Settings, Maximize, RotateCcw, ArrowDown } from 'lucide-react';
 import { motion, useAnimation } from 'motion/react';
 import confetti from 'canvas-confetti';
@@ -14,32 +14,56 @@ interface Student {
   color: string;
 }
 
-const INITIAL_STUDENTS: Student[] = [
-  { id: '1', name: 'Alice Smith', color: '#6366f1' },
-  { id: '2', name: 'Ben Johnson', color: '#10b981' },
-  { id: '3', name: 'Charlie Davis', color: '#f59e0b' },
-  { id: '4', name: 'Daisy Miller', color: '#ef4444' },
-  { id: '5', name: 'Ethan Hunt', color: '#3b82f6' },
-  { id: '6', name: 'Fiona Gallagher', color: '#8b5cf6' },
-  { id: '7', name: 'George Brown', color: '#ec4899' },
-  { id: '8', name: 'Hannah Wilson', color: '#f97316' },
-  { id: '9', name: 'Isaac Newton', color: '#22c55e' },
-  { id: '10', name: 'Jade West', color: '#a855f7' },
-  { id: '11', name: 'Kyle Reese', color: '#2563eb' },
-  { id: '12', name: 'Luna Lovegood', color: '#14b8a6' },
+const INITIAL_STUDENT_NAMES: string[] = [
+  'Alice Smith',
+  'Ben Johnson',
+  'Charlie Davis',
+  'Daisy Miller',
+  'Ethan Hunt',
+  'Fiona Gallagher',
+  'George Brown',
+  'Hannah Wilson',
+  'Isaac Newton',
+  'Jade West',
+  'Kyle Reese',
+  'Luna Lovegood',
+];
+
+const STUDENT_COLORS = [
+  '#6366f1',
+  '#10b981',
+  '#f59e0b',
+  '#ef4444',
+  '#3b82f6',
+  '#8b5cf6',
+  '#ec4899',
+  '#f97316',
+  '#22c55e',
+  '#a855f7',
+  '#2563eb',
+  '#14b8a6',
 ];
 
 export default function App() {
-  const [students] = useState<Student[]>(INITIAL_STUDENTS);
+  const [studentNamesText, setStudentNamesText] = useState<string>(INITIAL_STUDENT_NAMES.join('\n'));
   const [isSpinning, setIsSpinning] = useState(false);
   const [currentTurn, setCurrentTurn] = useState<string | null>(null);
-  const [lastWinner, setLastWinner] = useState<string | null>(null);
   const [rotation, setRotation] = useState(0);
   const controls = useAnimation();
-  const wheelRef = useRef<HTMLDivElement>(null);
+  const students = useMemo<Student[]>(() => {
+    return studentNamesText
+      .split('\n')
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0)
+      .map((name, index) => ({
+        id: String(index + 1),
+        name,
+        color: STUDENT_COLORS[index % STUDENT_COLORS.length],
+      }));
+  }, [studentNamesText]);
 
   const spin = async () => {
-    if (isSpinning) return;
+    if (isSpinning || students.length === 0) return;
 
     setIsSpinning(true);
     const extraSpins = 5 + Math.random() * 5;
@@ -62,7 +86,6 @@ export default function App() {
     const winner = students[winningIndex];
     
     setCurrentTurn(winner.name);
-    setLastWinner(winner.name);
 
     confetti({
       particleCount: 150,
@@ -74,7 +97,6 @@ export default function App() {
 
   const resetGame = () => {
     setCurrentTurn(null);
-    setLastWinner(null);
     setRotation(0);
     controls.set({ rotate: 0 });
   };
@@ -82,8 +104,8 @@ export default function App() {
   return (
     <div className="min-h-screen bg-[#F8FAFC] text-[#1E293B] font-sans flex flex-col">
       {/* Header */}
-      <header className="p-6 flex items-center justify-between bg-white border-b border-slate-100 shadow-sm">
-        <div className="flex items-center gap-4">
+      <header className="p-6 flex items-center justify-center bg-white border-b border-slate-100 shadow-sm relative">
+        <div className="flex items-center gap-4 absolute left-6 top-1/2 -translate-y-1/2">
           <div className="w-12 h-12 bg-indigo-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-indigo-200">
             <BookOpen size={24} />
           </div>
@@ -93,18 +115,11 @@ export default function App() {
           </div>
         </div>
 
-        <div className="flex-1 max-w-2xl mx-12">
+        <div className="w-full max-w-2xl mx-auto">
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-4 text-center">
             <h1 className="text-4xl font-bold text-amber-900">Question:</h1>
             <p className="text-4xl font-semibold text-amber-900 mt-2">Is bird can fly?</p>
           </div>
-        </div>
-
-        <div className="text-right">
-          <p className="text-xs uppercase tracking-widest font-bold text-slate-400 mb-1">Current Turn</p>
-          <p className="text-2xl font-mono font-bold text-indigo-600">
-            {currentTurn || '--'}
-          </p>
         </div>
       </header>
 
@@ -112,38 +127,20 @@ export default function App() {
         {/* Sidebar */}
         <div className="w-72 flex flex-col gap-6">
           <div className="bg-white rounded-3xl border border-slate-100 shadow-sm overflow-hidden flex flex-col flex-1">
-            <div className="p-5 border-b border-slate-50 flex items-center justify-between bg-slate-50/50">
-              <h2 className="font-bold text-slate-700">Participating Students</h2>
-              <span className="text-xs font-bold bg-slate-200 px-2 py-1 rounded-full text-slate-600">
-                {students.length} Total
-              </span>
+            <div className="p-5 border-b border-slate-50 bg-slate-50/50">
+              <h2 className="font-bold text-slate-700">Student Names</h2>
+              <p className="text-xs text-slate-500 mt-1">Paste one name per line</p>
             </div>
-            <div className="flex-1 overflow-y-auto p-2 space-y-1">
-              {students.map((student) => (
-                <div 
-                  key={student.id} 
-                  className={`flex items-center gap-3 p-3 rounded-2xl transition-colors ${currentTurn === student.name ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
-                >
-                  <div 
-                    className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-sm"
-                    style={{ backgroundColor: student.color }}
-                  >
-                    {student.name.charAt(0)}
-                  </div>
-                  <span className={`text-sm font-medium ${currentTurn === student.name ? 'text-indigo-700 font-bold' : 'text-slate-600'}`}>
-                    {student.name}
-                  </span>
-                </div>
-              ))}
+            <div className="flex-1 p-4">
+              <textarea
+                value={studentNamesText}
+                onChange={(event) => setStudentNamesText(event.target.value)}
+                className="w-full h-full min-h-[360px] rounded-2xl border border-slate-200 p-4 text-base text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                placeholder={'Alice Smith\nBen Johnson\nCharlie Davis'}
+              />
             </div>
           </div>
 
-          <div className="bg-indigo-600 rounded-3xl p-6 text-white shadow-xl shadow-indigo-200">
-            <p className="text-xs uppercase tracking-widest font-bold opacity-70 mb-2">Last Winner</p>
-            <p className="text-2xl font-bold truncate">
-              {lastWinner || '--'}
-            </p>
-          </div>
         </div>
 
         {/* Spinner Area */}
@@ -210,14 +207,14 @@ export default function App() {
 
           <button
             onClick={spin}
-            disabled={isSpinning}
+            disabled={isSpinning || students.length === 0}
             className={`mt-12 px-16 py-5 rounded-full text-xl font-black uppercase tracking-widest text-white shadow-2xl transition-all active:scale-95 ${
-              isSpinning 
+              isSpinning || students.length === 0
                 ? 'bg-slate-400 cursor-not-allowed' 
                 : 'bg-indigo-600 hover:bg-indigo-700 hover:shadow-indigo-300 shadow-indigo-200'
             }`}
           >
-            {isSpinning ? 'Spinning...' : 'Spin Now!'}
+            {isSpinning ? 'Spinning...' : students.length === 0 ? 'Add Names' : 'Spin Now!'}
           </button>
         </div>
       </main>
